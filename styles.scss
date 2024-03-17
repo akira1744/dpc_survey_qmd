@@ -1,0 +1,77 @@
+/*-- scss:defaults --*/
+
+// import google fonts
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap');
+
+$font-family-sans-serif: "Noto Sans JP", sans-serif, !default;
+
+/*-- scss:rules --*/
+
+#title-slide {
+  .title {
+  font-family: $font-family-sans-serif;
+  text-align: center !important;
+  font-weight: 150 !important;
+  font-size: 72px !important; 
+  }
+
+  .subtitle {
+  font-family: $font-family-sans-serif;
+  text-align: center !important;
+  font-weight: 200 !important;
+  font-size: 60px !important; 
+  }
+
+  .quarto-title-author {
+  font-family: $font-family-sans-serif;
+  text-align: center !important;
+  font-weight: 200 !important;
+  font-size: 48px !important; 
+  }
+}
+
+.reveal h1{
+  font-family: $font-family-sans-serif;
+  text-align: center !important;
+  font-weight: 200 !important;
+  font-size: 72px !important; 
+}
+
+.quarto-title-author{
+  font-family: $font-family-sans-serif;
+  text-align: center !important;
+  font-weight: 200 !important;
+  font-size: 48px !important; 
+
+}
+
+.reveal h2,{
+  font-family: $font-family-sans-serif;
+  text-align: center !important;
+  font-weight: 200 !important;
+  font-size: 24px !important; 
+
+}
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6{
+  font-family: $font-family-sans-serif;
+  text-align: left !important;
+  font-weight: 200 !important;
+  font-size: 24px !important; 
+}
+
+.reveal p {
+  font-family: $font-family-sans-serif;
+  text-align: left !important;
+  font-weight: 150 !important;
+  font-size: 20px !important; 
+}
+
+.reveal a {
+  font-family: $font-family-sans-serif;
+  text-align: left !important;
+  font-weight: 150 !important;
+  font-size: 20px !important; 
+}

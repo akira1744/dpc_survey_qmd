@@ -1,0 +1,703 @@
+---
+title: "DPC調査分析 埼玉県版"
+subtitle: 'MDC01:脳神経疾患'
+format: 
+  revealjs:
+    theme: [default,styles.scss]
+    width: 1280
+    height: 720
+    slide-number: true
+    standalone: true
+    embed-resources: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| include: false
+pacman::p_load(gt,knitr,DBI,RSQLite,ggrepel,tidyverse,tidylog)
+
+source('script/function.R')
+
+# setting
+set_mdc2cd <- '01'
+mdc2_title <- 'MDC01:脳神経疾患'
+set_hp <- '埼玉石心会病院'
+set_pref <- '埼玉県'
+max_nend_str <- '2021年度'
+max_nend <- 2021
+set_dpcfy <- 2020
+table_row <- 15
+```
+
+
+```{r}
+#| include: false
+# DBに接続
+dbpath <- 'data/dpc_survey_qmd.sqlite'
+con <-  DBI::dbConnect(RSQLite::SQLite(), dbpath, synchronous="off")
+
+# データの取得
+mst_latest <- get_mst_latest(con)
+mst_latest_latlon <- get_mst_latest_latlon(con)
+
+agg_long_mdc6 <- get_agg_long_mdc6(con, set_mdc2cd)
+agg_long_mdc10 <- get_agg_long_mdc10(con, set_mdc2cd)
+dpcmst_mdc6 <- get_dpcmst_mdc6(con, set_mdc2cd, set_dpcfy)
+dpcmst_ope <- get_dpcmst_ope(con, set_mdc2cd, set_dpcfy)
+
+# hp
+hp_gt <- create_hp_gt(con,set_hp,table_row)
+
+# mdc2
+agg_myhp_mdc2_all <- create_agg_myhp_mdc2_all(con,set_hp) %>% print()
+agg_myhp_mdc2_all_gt <- create_agg_myhp_mdc2_all_gt(agg_myhp_mdc2_all,set_mdc2cd) 
+myhp_mdc2_graph <- create_myhp_mdc2_graph(agg_myhp_mdc2_all)
+
+# mdc2
+agg_mdc2_all<- get_agg_mdc2_all(set_mdc2cd)
+agg_mdc2_gt <- create_mdc2_gt(agg_mdc2_all,set_hp,table_row)
+map_mdc2 <- create_map_mdc2(agg_mdc2_all,set_hp,mst_latest,mst_latest_latlon)
+
+# mdc6のdata作成
+agg_mdc6 <- create_agg_mdc6(agg_long_mdc6,table_row) %>% print()
+agg_mdc6_sum <- create_agg_long_mdc6_sum(agg_long_mdc6,max_nend,set_pref) %>% print()
+agg_mdc6_all<- create_agg_mdc6_all(agg_mdc6,agg_mdc6_sum,dpcmst_mdc6) %>% print()
+top_mdc6 <- create_top_mdc6(agg_mdc6_all,set_hp,table_row)
+
+myhp_mdc6_graph <- create_myhp_mdc6_graph(agg_mdc6_all,set_hp) %>% print()
+myhp_mdc6_gt <- create_myhp_mdc6_gt(agg_mdc6_all,set_hp,table_row) %>% print()
+
+# mdc10のdata作成
+agg_mdc10 <- create_agg_mdc10(agg_long_mdc10,table_row) %>% print()
+agg_mdc10_sum <- create_agg_mdc10_sum(agg_long_mdc10,max_nend,set_pref) %>% print()
+agg_mdc10_all <- create_agg_mdc10_all(agg_mdc10,agg_mdc10_sum,dpcmst_mdc6,dpcmst_ope) %>% print()
+
+
+```
+
+## Data Source
+
+<br>
+
+### ●厚生労働省　DPC導入の影響評価に関する調査
+
+<a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000049343.html" target="_blank">https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000049343.html</a>
+
+・毎年3月に前年度分が公開<br>
+・最新データは2021年度のデータ<br>
+・調査対象施設:5732施設(DPC病院1752、DPC準備病院242、出来高算定病院3738)<br>
+
+<br>
+
+### ●集計結果を参照する上での注意点
+
+以下のようなケースが集計に含まれないため、集計値は実際の患者数より少ない<br>
+
+・年度を跨いで入院している患者<br>
+・自費のみ、保険と他制度を併用している患者(労災など)<br>
+・一般病棟以外の病棟との移動がある患者(回復期、療養、地域ケア、精神など)<br>
+・その他の除外条件は、以下のURLを参照<br>
+
+<a href="https://www.mhlw.go.jp/content/12404000/001076036.pdf" target="_blank">https://www.mhlw.go.jp/content/12404000/001076036.pdf</a>
+
+・参考値<br>
+　・埼玉石心会病院全体(2021年度) 10568件 → DPC調査 9878件<br>
+　・脳梗塞(2021年度) 当院実績544件 → DPC調査 383件<br>
+　・未破裂脳動脈瘤(2021年度) 当院実績 278件 → DPC調査 268件<br>
+
+
+## 埼玉県 医療機関別実績
+
+```{r}
+hp_gt
+```
+
+## 疾患分類別実績 
+
+```{r}
+agg_myhp_mdc2_all_gt
+```
+
+## 疾患分類別ポジショニング分析
+
+```{r}
+myhp_mdc2_graph
+```
+
+## `r mdc2_title`
+
+```{r}
+agg_mdc2_gt
+```
+
+## `r str_c(mdc2_title, ' MAP')` 
+
+```{r}
+map_mdc2
+```
+
+## 疾患別実績
+
+```{r}
+myhp_mdc6_gt
+```
+
+## 疾患別ポジショニング分析
+
+```{r}
+myhp_mdc6_graph
+```
+
+
+```{r}
+#| include: false
+sickno <- 1
+mdc6_title <- create_mdc6_title(top_mdc6,sickno) %>% print()
+mdc6_gt <- create_mdc6_gt(agg_mdc6_all,top_mdc6,sickno)
+sickno_mdc10 <- create_sickno_mdc10(agg_mdc10_all,top_mdc6,sickno) %>% print()
+```
+
+## `r mdc6_title`
+
+```{r}
+mdc6_gt
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '01'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '02'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '97'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '99'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+sickno <- 2
+mdc6_title <- create_mdc6_title(top_mdc6,sickno) %>% print()
+mdc6_gt <- create_mdc6_gt(agg_mdc6_all,top_mdc6,sickno)
+sickno_mdc10 <- create_sickno_mdc10(agg_mdc10_all,top_mdc6,sickno) %>% print()
+```
+
+
+## `r mdc6_title`
+
+```{r}
+
+mdc6_gt
+
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '01'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '03'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '99'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+sickno <- 3
+mdc6_title <- create_mdc6_title(top_mdc6,sickno)
+mdc6_gt <- create_mdc6_gt(agg_mdc6_all,top_mdc6,sickno)
+sickno_mdc10 <- create_sickno_mdc10(agg_mdc10_all,top_mdc6,sickno) %>% print()
+```
+
+
+## `r mdc6_title`
+
+```{r}
+
+mdc6_gt
+
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '01'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '02'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '97'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '99'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+sickno <- 4
+mdc6_title <- create_mdc6_title(top_mdc6,sickno)
+mdc6_gt <- create_mdc6_gt(agg_mdc6_all,top_mdc6,sickno)
+sickno_mdc10 <- create_sickno_mdc10(agg_mdc10_all,top_mdc6,sickno) %>% print()
+```
+
+
+## `r mdc6_title`
+
+```{r}
+
+mdc6_gt
+
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '02'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+sickno <- 5
+mdc6_title <- create_mdc6_title(top_mdc6,sickno)
+mdc6_gt <- create_mdc6_gt(agg_mdc6_all,top_mdc6,sickno)
+sickno_mdc10 <- create_sickno_mdc10(agg_mdc10_all,top_mdc6,sickno) %>% print()
+```
+
+## `r mdc6_title`
+
+```{r}
+
+mdc6_gt
+
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '01'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+set_opecd <- '97'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+set_opecd <- '99'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+sickno <- 6
+mdc6_title <- create_mdc6_title(top_mdc6,sickno)
+mdc6_gt <- create_mdc6_gt(agg_mdc6_all,top_mdc6,sickno)
+sickno_mdc10 <- create_sickno_mdc10(agg_mdc10_all,top_mdc6,sickno) %>% print()
+```
+
+## `r mdc6_title`
+
+```{r}
+
+mdc6_gt
+
+```
+
+```{r}
+#| include: false
+set_opecd <- '01'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+set_opecd <- '99'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+sickno <- 7
+mdc6_title <- create_mdc6_title(top_mdc6,sickno)
+mdc6_gt <- create_mdc6_gt(agg_mdc6_all,top_mdc6,sickno)
+sickno_mdc10 <- create_sickno_mdc10(agg_mdc10_all,top_mdc6,sickno) %>% print()
+```
+
+## `r mdc6_title`
+
+```{r}
+
+mdc6_gt
+
+```
+
+```{r}
+#| include: false
+set_opecd <- '97'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+set_opecd <- '99'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+sickno <- 8
+mdc6_title <- create_mdc6_title(top_mdc6,sickno)
+mdc6_gt <- create_mdc6_gt(agg_mdc6_all,top_mdc6,sickno)
+sickno_mdc10 <- create_sickno_mdc10(agg_mdc10_all,top_mdc6,sickno) %>% print()
+```
+
+## `r mdc6_title`
+
+```{r}
+
+mdc6_gt
+
+```
+
+```{r}
+#| include: false
+set_opecd <- '01'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+
+```{r}
+#| include: false
+set_opecd <- '02'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+set_opecd <- '99'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+sickno <- 9
+mdc6_title <- create_mdc6_title(top_mdc6,sickno)
+mdc6_gt <- create_mdc6_gt(agg_mdc6_all,top_mdc6,sickno)
+sickno_mdc10 <- create_sickno_mdc10(agg_mdc10_all,top_mdc6,sickno) %>% print()
+```
+
+## `r mdc6_title`
+
+```{r}
+
+mdc6_gt
+
+```
+
+```{r}
+#| include: false
+set_opecd <- '99'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+sickno <- 10
+mdc6_title <- create_mdc6_title(top_mdc6,sickno)
+mdc6_gt <- create_mdc6_gt(agg_mdc6_all,top_mdc6,sickno)
+sickno_mdc10 <- create_sickno_mdc10(agg_mdc10_all,top_mdc6,sickno) %>% print()
+```
+
+## `r mdc6_title`
+
+```{r}
+
+mdc6_gt
+```
+
+```{r}
+#| include: false
+set_opecd <- '02'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+set_opecd <- '97'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
+
+```{r}
+#| include: false
+set_opecd <- '99'
+mdc10_title <- create_mdc10_title(sickno_mdc10,set_opecd) %>% print()
+mdc10_gt <- create_mdc10_gt(agg_mdc10_all, sickno_mdc10, set_hp, set_opecd,table_row) 
+```
+
+## `r mdc10_title`
+
+
+```{r}
+mdc10_gt
+```
